@@ -77,6 +77,26 @@
 	select pg_is_in_recovery();
 ```
 
+### Failover
+**On Primary**
+```sh
+pg_lsclusters
+pg_ctlcluster 13 main status
+pg_ctlcluster 13 main stop
+pg_lsclusters
+```
+**On Standby**
+```sh
+pg_lsclusters
+pg_ctlcluster 13 main status
+pg_ctlcluster 13 main promote
+pg_ctlcluster 13 main start
+pg_ctlcluster 13 main status
+```
+```sql
+select pg_is_in_recovery();
+select * from pg_stat_wal_receiver;
+```
 
 **Recap:**
 
