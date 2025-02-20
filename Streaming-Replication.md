@@ -124,21 +124,22 @@ Configuring the Replica Server
 	cat postgresql.auto.conf
 
 4. Start the Replica
+```sh
 	pg_ctl -D <data_directory_path> start	
-	
 	or
-
 	pg_ctlcluster 13 main start
+```	
 
 **Verify Replication**
+On Primary:
 
-	On Primary:
 ```sql
 	psql
 	\x
 	select * from pg_stat_replication;
 ```
-	On Standby:
+On Standby:
+
 ```sql
 	psql
 	\x
