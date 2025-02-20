@@ -15,9 +15,12 @@
 ```sh
 	su - postgres
 	mkdir -p /var/lib/postgresql/archivelog	
+
+	psql
 	show data_directory;
 	show config_file;
 	show hba_file;
+	
 	vi /var/lib/pgsql/12/data/postgresql.conf
 	listen_adrdesses = '*' or 'IP_address'
 	archive_mode = on
