@@ -131,6 +131,7 @@ Configuring the Replica Server
 ```	
 
 **Verify Replication**
+
 On Primary:
 
 ```sql
