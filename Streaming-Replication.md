@@ -77,7 +77,7 @@
 	select pg_is_in_recovery();
 ```
 
-### Failover
+## Failover
 **On Primary**
 ```sh
 pg_lsclusters
@@ -109,28 +109,39 @@ listen_addresses = '*'
 Type 	Database 	User 			Address 	Method
 host	all			replication		<sandby_ip>	md5 or trust
 4. Restart the Primary Server
-systemctl restart postgresql-12.service or pg_ctl -D <data_directory_path> restart
+systemctl restart postgresql-13.service or pg_ctl -D <data_directory_path> restart or pg_ctlcluster 13 main restart
 
 Configuring the Replica Server
 1. If Replica already exists, then Ensure that Postgres instance is stopped and the data directory is empty
 
 2. Copy the backup of pg_basebackup to the Data Directory of Standby server
+
 	pg_base_backup -h <primary_ip>/localhost -U replicator -p 5432 -D basebackup -c -Fp -Xs -P -R -C
-	-C means, recyle the Wal File only when Replica has fully consumed it.
+
+	-C is to create the slot, it allows recyle of the Wal File only when Replica has fully consumed it.
 
 3. Check postgresql.auto.conf on replica, it contains connection information to Primary
 	cat postgresql.auto.conf
 
 4. Start the Replica
 	pg_ctl -D <data_directory_path> start	
+	
+	or
 
-Verify Replication
+	pg_ctlcluster 13 main start
+
+**Verify Replication**
+
 	On Primary:
+```sql
 	psql
 	\x
 	select * from pg_stat_replication;
+```
 	On Standby:
+```sql
 	psql
 	\x
 	select * From pg_stat_wal_receiver;
 	select pg_is_in_recovery();
+```
