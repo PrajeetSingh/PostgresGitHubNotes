@@ -10,33 +10,49 @@
 	show wal_level; (replica)
 	show max_wal_senders; (10)
 	show hot_standby; (on)
-	listen_addresses = '*' or 'IP_address'
 ```
 **Step 3)** Continuous archiving is disabled by default. We need to enable it.
 ```sh
-	mkdir -p /var/lib/pgsql/archivelog	
+	su - postgres
+	mkdir -p /var/lib/postgresql/archivelog	
+	show data_directory;
 	show config_file;
+	show hba_file;
 	vi /var/lib/pgsql/12/data/postgresql.conf
+	listen_adrdesses = '*' or 'IP_address'
 	archive_mode = on
 	archive_command = 'test ! -f /var/lib/pgsql/archivelog/%f && cp %p /var/lib/pgsql/archivelog/%f'
 			(This means, check if archived log file already exists in /var/lib/pgsql/archivelog/, if not then copy it.)
-	vi pg_hba.conf
+	vi /etc/postgresql/13/main/pg_hba.conf
 #	Type	database	user		address		method
 	host	replication	replicator	192.168.1.0/24	md5
+
+	# Restart Postgres Cluster, as postgresql.conf is updated. If only pg_hba.conf is updated, then only reload is enough.	
 	systemctl restart postgresql-12.service or pg_ctl -D <data_directory_path> restart
+	or
+	sudo pg_ctlcluster 13 main restart
+	sudo pg_ctlcluster 13 main status
+	pg_lsclusters
 ```
 **Step 4)** Copy backup of Primary to Standby using pg_basebackup
 ```sh
-	pg_base_backup -h <primary_ip>/localhost -U replicator -p 5432 -D basebackup -c -Fp -Xs -P -R -C 
+	pg_basebackup -h <primary_ip> -U replicator -p 5432 -D /var/lib/postgresql/basebackup -Fp -Xs -P -R -c fast -C -S myslot1
+	or
+	pg_basebackup -h localhost -U replicator -p 5432 -D /var/lib/postgresql/basebackup -c fast -C -S myslot1 -Fp -Xs -P -R
+
+	# -C -S myslot1 if we are creating a new slot, just -S myslot1 if slot already exists.
 ```
 **Step 5)** rsync the backup to data directory of Standby
 ```sh
-	rsync -a basebackup/ postgres@192.168.1.198:/var/lib/pgsql/12/data/
+	rsync -a basebackup/ postgres@172.31.85.180:/var/lib/postgresql/13/main/
 #	copied directory should also have standby.signal file too on the Standby server
 ```
 **Step 6)** Startup Postgres service on Standby server
 	you'll find that db and data is there in Standby now but it'll be Read Only
 ```sql
+	sudo pg_ctlcluster 13 main start
+	sudo pg_ctlcluster 13 main status
+	pg_lsclusters
 	\l
 	\dt+
 ```
@@ -55,6 +71,7 @@
 	psql
 	\x
 	select * From pg_stat_wal_receiver;
+	select pg_is_in_recovery();
 ```
 
 
@@ -93,3 +110,4 @@ Verify Replication
 	psql
 	\x
 	select * From pg_stat_wal_receiver;
+	select pg_is_in_recovery();
