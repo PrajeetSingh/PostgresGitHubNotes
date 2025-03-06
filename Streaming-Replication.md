@@ -13,6 +13,7 @@ Starting from PostgreSQL 13, we don't use *recovery.conf* file unlike version 11
 CREATE USER replicator WITH REPLICATION PASSWROD 'MySecretPassword';
 -- or
 CREATE USER replicator WITH REPLICATION;
+\du
 ```
 
 **Step 2)** Below parameters are already set as expected by default
@@ -70,8 +71,10 @@ pg_lsclusters
 
 **Step 6)** Copy backup of Primary to Standby using pg_basebackup
 ```sh
+# If running from Standby server
 pg_basebackup -h <primary_ip> -U replicator -p 5432 -D /var/lib/postgresql/basebackup -c fast -Fp (or -Ft -z) -C -S myslot1 -Xs -P -R
-or
+# or
+# If running locally on Primary server
 pg_basebackup -h localhost -U replicator -p 5432 -D /var/lib/postgresql/basebackup -c fast (or --checkpoint=fast) -C -S myslot1 -Fp -Xs -P -R
 
 # -C -S myslot1 if we are creating a new slot, just -S myslot1 if slot already exists.
@@ -79,6 +82,7 @@ pg_basebackup -h localhost -U replicator -p 5432 -D /var/lib/postgresql/baseback
 
 **Step 7)** rsync the backup to data directory of Standby
 ```sh
+# Remove all files in /var/lib/postgresql/13/main/ directory on Standby server first.
 rsync -a basebackup/ postgres@172.31.85.180:/var/lib/postgresql/13/main/
 #	copied directory should also have standby.signal file too on the Standby server
 ```
