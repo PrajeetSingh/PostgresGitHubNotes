@@ -28,6 +28,11 @@ To configure cascading replication, you need to modify the recovery.conf / postg
 standby_mode = on
 primary_conninfo = 'host=first_replica_server_ip_address port=5432 user=replicator password=password'
 ```
+```sql
+ALTER SYSTEM SET primary_conninfo = 'host=first_replica_server_ip_address port=5432 user=replicator password=password';
+SELECT pg_reload_conf();
+```
+
 Replace first_replica_server_ip_address with the IP address of the first replica server and password with the password for the replication user.
 
 Repeat Step 4 to add more replica servers.
