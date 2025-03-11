@@ -31,3 +31,6 @@ primary_conninfo = 'host=first_replica_server_ip_address port=5432 user=replicat
 Replace first_replica_server_ip_address with the IP address of the first replica server and password with the password for the replication user.
 
 Repeat Step 4 to add more replica servers.
+
+**NOTE:** 
+You'll find that `pg_stat_replication` and `pg_stat_wal_receiver`, both are running on Master Standby cluster.
