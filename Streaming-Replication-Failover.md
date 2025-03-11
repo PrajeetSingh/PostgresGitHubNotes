@@ -35,6 +35,7 @@ pg_lsclusters
 pg_lsclusters
 pg_ctlcluster 13 main status
 pg_ctlcluster 13 main promote
+select pg_promote();
 pg_ctlcluster 13 main start
 pg_ctlcluster 13 main status
 ```
