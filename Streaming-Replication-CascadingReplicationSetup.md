@@ -1,4 +1,4 @@
-#Cascading Replication - Step by Step Complete Setup
+# Cascading Replication - Step by Step Complete Setup
 
 To accomplish this, we need to setup a Primary Server, an upstream Standby Server and one or more Cascading Servers.
 
@@ -24,5 +24,7 @@ host replication all 0.0.0.0/0 mdf
 
 * Restart the PostgreSQL to apply changes
 ```sh
+pg_ctlcluster 13 main restart
+# OR
 sudo systemctl restart postgresql-13
 ```
