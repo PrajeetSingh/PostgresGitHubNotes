@@ -124,3 +124,36 @@ select pg_is_in_recovery();
 \x
 select * from pg_stat_wal_receiver;
 ```
+
+### 4. Configure Cascading Standby Servers
+
+* Take a base backup from the Upstream Standby Server
+```sh
+pg_basebackup -h <primary_ip> -D /var/lib/postgresql/13/main/ -U replicator -c fast -Fp (or -Ft -z) -Xs -P -R
+
+# rsync it if command was run on Primary server
+rsync -a basebackup/ postgres@<cascading server ip>:/var/lib/postgresql/13/main/
+```
+
+* Verify Standby parameters on Cascading Standby Server
+```sh 
+hot_standby = on
+primary_conninfo = 'host=<upstream_standby_ip> port=5432 user=replicator password=your_password'
+```
+
+* Create the standby.signal file in Data Directory of Cascading Standby Server if it doesn't exist
+```sh
+touch /var/lib/postgresql/13/main/standby.signal
+```
+
+* Start Cascading Standby Server and Verify Replication
+```sh
+pg_ctlcluster 13 main start
+pg_ctlcluster 13 main status
+pg_lsclusters
+\l
+\dt+
+# OR
+sudo systemctl restart postgresql-13
+sudo systemctl status postgresql-13
+```
