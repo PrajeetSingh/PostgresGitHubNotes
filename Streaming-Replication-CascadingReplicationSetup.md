@@ -264,3 +264,5 @@ insert into pj_table1 values (default);
 insert into pj_table1 values (default);
 select * from pj_table1;
 ```
+
+Good to read: https://www.mydbops.com/blog/setting-up-cascading-replication-in-postgresql
