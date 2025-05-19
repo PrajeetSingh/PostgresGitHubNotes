@@ -42,7 +42,7 @@ archive_command = 'test ! -f /var/lib/pgsql/archivelog/%f && cp %p /var/lib/pgsq
 
 **Step 4)** Verify and Setup other parameters if you need to on Primary cluster
 ```sql
-select name, setting from pg_settings where name in ('listen_addresses','archive_mode','archive_command','wal_keep_segments','restore_command');
+select name, setting from pg_settings where name in ('listen_addresses','archive_mode','archive_command','wal_keep_segments','restore_command','wal_level','wal_keep_segments','wal_keep_size');
 -- Instead of wal_keep_segments, we may need to setup wal_keep_size too. We can set it to 10 GB.
 -- restore_command parameer is for automatic recovery of Replica using archived location.
 -- Or you can setup these parameters
