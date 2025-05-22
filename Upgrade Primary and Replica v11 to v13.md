@@ -315,3 +315,63 @@ SELECT * FROM pg_stat_wal_receiver;
 ```
 
 Test by inserting data on the primary and verifying it appears on the standby.
+
+## IV. Post-Upgrade Steps (On Primary)
+
+### 1. Run ANALYZE
+
+After the upgrade, it's highly recommended to run `ANALYZE` on all databases to update statistics for the query planner.
+
+```Bash
+sudo -u postgres psql -c "VACUUM ANALYZE;"
+# Or, if you prefer to vacuum one database at a time
+# sudo -u postgres psql -d your_database -c "VACUUM ANALYZE;"
+```
+
+### 2. Run REINDEX (Optional but Recommended)
+
+In some cases, especially after major version upgrades, reindexing system catalogs and frequently used indexes can improve performance. This can be time-consuming and acquire locks.
+
+```Bash
+sudo -u postgres psql -c "REINDEX DATABASE your_database;"
+# Or for all databases:
+# sudo -u postgres psql -c "REINDEX SYSTEM your_database;" # For system catalogs
+# And then for user tables:
+# sudo -u postgres psql -c "REINDEX DATABASE CONCURRENTLY your_database;" # If you can't take downtime
+```
+
+Consider using `REINDEX CONCURRENTLY` if possible to avoid blocking operations, though it's still resource-intensive.
+
+### 3. Clean Up Old Cluster (Primary Only)
+
+After a successful upgrade using the hard link method, `pg_upgradecluster` will generate a cleanup script. You can find it in the new data directory.
+
+```Bash
+sudo -u postgres psql -c "SHOW data_directory;" # Get the PG13 data directory path
+# Example output: /var/lib/postgresql/13/main
+```
+
+Then, look for the cleanup script:
+
+```Bash
+ls -l /var/lib/postgresql/13/main/delete_old_cluster.sh
+```
+
+Carefully review the script before running it. It will remove the old PostgreSQL 11 data directory files.
+
+```Bash
+sudo sh /var/lib/postgresql/13/main/delete_old_cluster.sh
+```
+
+Once you're confident in the stability of your new cluster, you can also remove the PostgreSQL 11 packages:
+
+```Bash
+sudo apt purge postgresql-11 postgresql-client-11
+sudo apt autoremove
+```
+
+### 4. Update `archive_command` on Primary (if using remote archiving)
+
+If your `archive_command` involved path specific to PG11 (e.g., `/var/lib/postgresql/11/main/pg_wal`), update it to reflect the PG13 path (`/var/lib/postgresql/13/main/pg_wal` or just use %p).
+
+The hard link method is faster but requires careful handling of the `delete_old_cluster.sh` script.
