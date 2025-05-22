@@ -231,4 +231,5 @@ You can also check the WAL receiver status on the standby:
 ```SQL
 SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();
 -- These values should be close to each other and advancing.
+SELECT * FROM pg_stat_wal_receiver;
 ```
