@@ -35,7 +35,7 @@ CREATE USER rep_user WITH REPLICATION ENCRYPTED PASSWORD 'mysecretpassword';
 
 Edit the postgresql.conf file (show config_file;). Find and modify or add the following parameters.
 
-```TOML
+```Ini, TOML
 # Connections
 listen_addresses = '*' # Allow connections from all interfaces (or specify specific IPs like 'localhost,192.168.1.101')
 max_connections = 100  # Adjust as needed, ensure enough for clients + replication
@@ -63,16 +63,16 @@ sudo chown postgres:postgres /var/lib/postgresql/wal_archive
 
 Edit the pg_hba.conf file (show hba_file;). Add an entry to allow the replication user from the standby server's IP address to connect for replication.
 
-```text
+```Ini, TOML
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 host    replication     rep_user        192.168.1.101/32        md5
 ```
-
+```Ini, TOML
 *replication*: A special database keyword for replication connections.
 *rep_user*: The replication user you created.
 *192.168.1.101/32*: The IP address of your standby server (use /32 for a single host). You can use a subnet (e.g., 192.168.1.0/24) if you have multiple standbys in that range.
 *md5*: Specifies password authentication.
-
+```
 **4. Reload/Restart PostgreSQL**
 
 Apply the changes by reloading or restarting the PostgreSQL service. A reload is usually sufficient for postgresql.conf changes, but a restart is safer to ensure all changes take effect.
