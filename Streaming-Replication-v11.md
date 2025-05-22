@@ -20,7 +20,7 @@ A significant change in PostgreSQL 12 and later is the deprecation of recovery.c
 
 ## Steps to Configure Streaming Replication
 
-###I. On the Primary Server
+### I. On the Primary Server
 
 **1. Create a Replication User**
 
@@ -74,6 +74,7 @@ host    replication     rep_user        192.168.1.101/32        md5
 *md5*: Specifies password authentication.
 
 **4. Reload/Restart PostgreSQL**
+
 Apply the changes by reloading or restarting the PostgreSQL service. A reload is usually sufficient for postgresql.conf changes, but a restart is safer to ensure all changes take effect.
 
 ```sh
@@ -86,7 +87,7 @@ pg_ctlcluster 11 main reload
 pg_ctlcluster 11 main restart
 ```
 
-###II. On the Standby Server
+### II. On the Standby Server
 
 **1. Stop PostgreSQL (if running):**
 
@@ -99,6 +100,7 @@ pg_ctlcluster 11 main stop
 ```
 
 **2. Clear Existing Data Directory**
+
 This step will delete all data in the standby's PostgreSQL data directory. Ensure you're targeting the correct directory and that it's empty or can be safely overwritten.
 
 ```sh
@@ -106,12 +108,14 @@ sudo rm -rf /var/lib/postgresql/11/main/*
 ```
 
 **3. Take a Base Backup from the Primary**
+
 Run this command on the standby server as the postgres user. This connects to the primary, takes a snapshot of its data, and copies it to the standby's data directory.
 
 ```sh
 sudo -u postgres pg_basebackup -h 192.168.1.100 -U rep_user -D /var/lib/postgresql/11/main -F p -X stream -c fast -P -v
 ```
-```text
+
+```Ini, TOML
 You will be prompted for the rep_user password.
 
 -h 192.168.1.100: Hostname or IP address of the primary server.
@@ -126,13 +130,14 @@ You will be prompted for the rep_user password.
 **Important for PG11**: Unlike PostgreSQL 12+, pg_basebackup in PG11 does not automatically create recovery.conf with the -R option. You need to create it manually in the next step.
 
 **4. Create recovery.conf file**
+
 On PostgreSQL 11, you must create a recovery.conf file inside the standby's data directory (/var/lib/postgresql/11/main) to tell it to act as a standby and connect to the primary.
 
 ```sh
 sudo vi /var/lib/postgresql/11/main/recovery.conf
 ```
 Add the following content
-```TOML
+```Ini, TOML
 standby_mode = 'on'
 primary_conninfo = 'host=192.168.1.100 port=5432 user=rep_user password=your_secure_password application_name=standby.example.com'
 restore_command = 'cp /var/lib/postgresql/wal_archive/%f %p' # Only needed if using a separate WAL archive on the primary.
