@@ -12,7 +12,8 @@
 * **Replication User:** A dedicated PostgreSQL user with REPLICATION privileges used by the standby to connect to the primary.
 * **pg_hba.conf:** PostgreSQL's client authentication configuration file. You'll need to add entries to allow replication connections.
 
-### Important Note for PostgreSQL 11 vs. 12+:
+### Important Note for PostgreSQL 11 vs. 12+
+
 A significant change in PostgreSQL 12 and later is the deprecation of recovery.conf. In PostgreSQL 11 and earlier, you must create a recovery.conf file in the standby's data directory. For PostgreSQL 12+, this file is replaced by the standby.signal file and replication settings moved to postgresql.auto.conf (often automatically handled by pg_basebackup -R).
 
 * PostgreSQL Data Directory (Debian 11 default): /var/lib/postgresql/11/main
@@ -67,6 +68,7 @@ Edit the pg_hba.conf file (show hba_file;). Add an entry to allow the replicatio
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 host    replication     rep_user        192.168.1.101/32        md5
 ```
+
 * `replication:` A special database keyword for replication connections.
 * `rep_user:` The replication user you created.
 * `192.168.1.101/32:` The IP address of your standby server (use /32 for a single host). You can use a subnet (e.g., 192.168.1.0/24) if you have multiple standbys in that range.
@@ -126,6 +128,7 @@ You will be prompted for the rep_user password.
 -P: Shows progress.
 -v: Verbose output.
 ```
+
 **Important for PG11**: Unlike PostgreSQL 12+, pg_basebackup in PG11 does not automatically create recovery.conf with the -R option. You need to create it manually in the next step.
 
 **4. Create recovery.conf file**
@@ -135,7 +138,9 @@ On PostgreSQL 11, you must create a recovery.conf file inside the standby's data
 ```sh
 sudo vi /var/lib/postgresql/11/main/recovery.conf
 ```
+
 Add the following content
+
 ```Ini, TOML
 standby_mode = 'on'
 primary_conninfo = 'host=192.168.1.100 port=5432 user=rep_user password=your_secure_password application_name=standby.example.com'
@@ -182,6 +187,7 @@ sudo systemctl start postgresql@11-main
 ```
 
 **Verify the service status**
+
 ```Bash
 sudo systemctl status postgresql@11-main 
 # or
@@ -195,39 +201,47 @@ sudo pg_ctlcluster 11 main status
 ```SQL
 SELECT client_addr, state, sync_state, sync_priority, replay_lsn, application_name FROM pg_stat_replication;
 ```
-You should see output similar to this
-```Ini, TOML
 
+You should see output similar to this
+
+```Ini, TOML
       client_addr  |   state   | sync_state | sync_priority | replay_lsn | application_name
 -----------------+-----------+------------+---------------+------------+------------------
  192.168.1.101 | streaming | async      |             0 | 0/3000000  | standby.example.com
 (1 row)
 ```
+
 * `state:` streaming indicates active WAL streaming.
 * `sync_state:` async means asynchronous replication (primary commits without waiting for standby acknowledgment).
 
 ### On the Standby Server:
 
 **Verify it's in recovery mode**
+
 ```SQL
 SELECT pg_is_in_recovery();
 -- This should return t (true).
 SELECT * FROM pg_stat_wal_receiver;
 ```
+
 Now, create a table or insert data on the primary. Then, query the standby to confirm the data has replicated.
 
 ### On Primary
+
 ```SQL
 CREATE TABLE test_repl (id serial primary key, message text);
 INSERT INTO test_repl (message) VALUES ('Hello from primary!');
 ```
 
 ### On Standby
+
 ```SQL
 SELECT * FROM test_repl;
 -- You should see the "Hello from primary!" row.
 ```
+
 You can also check the WAL receiver status on the standby:
+
 ```SQL
 SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();
 -- These values should be close to each other and advancing.
