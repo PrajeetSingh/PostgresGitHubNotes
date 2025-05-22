@@ -145,3 +145,46 @@ restore_command = 'cp /var/lib/postgresql/wal_archive/%f %p' # Only needed if us
                                                               # Ensure the standby can access the archive path (e.g., via NFS mount or rsync).
 recovery_target_timeline = 'latest'
 ```
+
+* `standby_mode = 'on':` Tells PostgreSQL to start in standby mode.
+* `primary_conninfo:` The connection string to the primary. Replace your_secure_password with the actual password for rep_user. application_name is optional but helpful for monitoring on the primary.
+* `restore_command:` This is used if the standby falls too far behind the primary and needs to fetch WAL segments from the archive instead of streaming. If you set archive_command on the primary, ensure the standby can access that archive location and use a corresponding restore_command. If the archive is local to the primary, you'd need to rsync or scp the files over, or mount the archive directory via NFS.
+* `recovery_target_timeline = 'latest':` Ensures the standby always recovers to the latest timeline available from the primary.
+
+**Permissions for `recovery.conf`**
+
+Ensure the `recovery.conf` file has appropriate permissions, typically readable by the postgres user.
+
+```sh
+sudo chown postgres:postgres /var/lib/postgresql/11/main/recovery.conf
+sudo chmod 600 /var/lib/postgresql/11/main/recovery.conf
+```
+
+**5. Configure postgresql.conf on Standby (Optional but Recommended)**
+
+While `recovery.conf` handles the replication, you might want to adjust other parameters in the main postgresql.conf on the standby for general operation or monitoring.
+
+```sh
+sudo nano /etc/postgresql/11/main/postgresql.conf
+Ensure hot_standby = on is set (it should be commented out by default, uncomment it). This allows read-only queries on the standby.
+```
+
+```Ini, TOML
+hot_standby = on
+```
+
+**6.Start PostgreSQL on the Standby**
+
+Start the PostgreSQL service on the standby. It should now connect to the primary and begin streaming WALs.
+
+```Bash
+sudo systemctl start postgresql@11-main
+```
+
+**Verify the service status**
+```Bash
+sudo systemctl status postgresql@11-main 
+# or
+sudo pg_ctlcluster 11 main status
+```
+
