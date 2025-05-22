@@ -16,7 +16,7 @@
 
 ### On the Primary Server
 
-1. Create a Replication User
+**1. Create a Replication User**
 
 Create a dedicated user for replication with the REPLICATION role. Choose a strong password.
 
@@ -25,7 +25,7 @@ CREATE USER rep_user WITH REPLICATION ENCRYPTED PASSWORD 'mysecretpassword';
 \q
 ```
 
-2. Configure postgresql.conf
+**2. Configure postgresql.conf**
 
 Edit the postgresql.conf file (usually located in /var/lib/postgresql/data or /etc/postgresql/<version>/main/). Find and modify or add the following parameters.
 
