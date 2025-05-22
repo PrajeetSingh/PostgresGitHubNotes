@@ -67,13 +67,10 @@ Edit the pg_hba.conf file (show hba_file;). Add an entry to allow the replicatio
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 host    replication     rep_user        192.168.1.101/32        md5
 ```
-`replication:` A special database keyword for replication connections.
-
-`rep_user:` The replication user you created.
-
-`192.168.1.101/32:` The IP address of your standby server (use /32 for a single host). You can use a subnet (e.g., 192.168.1.0/24) if you have multiple standbys in that range.
-
-`md5:` Specifies password authentication.
+* `replication:` A special database keyword for replication connections.
+* `rep_user:` The replication user you created.
+* `192.168.1.101/32:` The IP address of your standby server (use /32 for a single host). You can use a subnet (e.g., 192.168.1.0/24) if you have multiple standbys in that range.
+* `md5:` Specifies password authentication.
 
 **4. Reload/Restart PostgreSQL**
 
