@@ -188,3 +188,47 @@ sudo systemctl status postgresql@11-main
 sudo pg_ctlcluster 11 main status
 ```
 
+## III. Verification
+
+### On the Primary Server
+
+```SQL
+SELECT client_addr, state, sync_state, sync_priority, replay_lsn, application_name FROM pg_stat_replication;
+```
+You should see output similar to this
+```Ini, TOML
+
+      client_addr  |   state   | sync_state | sync_priority | replay_lsn | application_name
+-----------------+-----------+------------+---------------+------------+------------------
+ 192.168.1.101 | streaming | async      |             0 | 0/3000000  | standby.example.com
+(1 row)
+```
+* `state:` streaming indicates active WAL streaming.
+* `sync_state:` async means asynchronous replication (primary commits without waiting for standby acknowledgment).
+
+### On the Standby Server:
+
+**Verify it's in recovery mode**
+```SQL
+SELECT pg_is_in_recovery();
+-- This should return t (true).
+SELECT * FROM pg_stat_wal_receiver;
+```
+Now, create a table or insert data on the primary. Then, query the standby to confirm the data has replicated.
+
+### On Primary
+```SQL
+CREATE TABLE test_repl (id serial primary key, message text);
+INSERT INTO test_repl (message) VALUES ('Hello from primary!');
+```
+
+### On Standby
+```SQL
+SELECT * FROM test_repl;
+-- You should see the "Hello from primary!" row.
+```
+You can also check the WAL receiver status on the standby:
+```SQL
+SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();
+-- These values should be close to each other and advancing.
+```
