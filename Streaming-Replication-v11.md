@@ -28,7 +28,7 @@ A significant change in PostgreSQL 12 and later is the deprecation of recovery.c
 Create a dedicated user for replication with the REPLICATION role. Choose a strong password.
 
 ```sql
-CREATE USER rep_user WITH REPLICATION ENCRYPTED PASSWORD 'mysecretpassword';
+create user rep_user with replication ecrypted password 'mysecretpassword';
 \q
 ```
 
@@ -186,7 +186,7 @@ sudo chmod 600 /var/lib/postgresql/11/main/recovery.conf
 While `recovery.conf` handles the replication, you might want to adjust other parameters in the main postgresql.conf on the standby for general operation or monitoring.
 
 ```sh
-sudo nano /etc/postgresql/11/main/postgresql.conf
+sudo vi /etc/postgresql/11/main/postgresql.conf
 Ensure hot_standby = on is set (it should be commented out by default, uncomment it). This allows read-only queries on the standby.
 ```
 
@@ -215,7 +215,7 @@ sudo pg_ctlcluster 11 main status
 ### On the Primary Server
 
 ```SQL
-SELECT client_addr, state, sync_state, sync_priority, replay_lsn, application_name FROM pg_stat_replication;
+select client_addr, state, sync_state, sync_priority, replay_lsn, application_name from pg_stat_replication;
 ```
 
 You should see output similar to this
@@ -235,9 +235,9 @@ You should see output similar to this
 **Verify it's in recovery mode**
 
 ```SQL
-SELECT pg_is_in_recovery();
+select pg_is_in_recovery();
 -- This should return t (true).
-SELECT * FROM pg_stat_wal_receiver;
+select * from pg_stat_wal_receiver;
 ```
 
 Now, create a table or insert data on the primary. Then, query the standby to confirm the data has replicated.
@@ -245,21 +245,21 @@ Now, create a table or insert data on the primary. Then, query the standby to co
 ### On Primary
 
 ```SQL
-CREATE TABLE test_repl (id serial primary key, message text);
-INSERT INTO test_repl (message) VALUES ('Hello from primary!');
+create table pjtest_repl (id serial primary key, message text);
+insert into pjtest_repl (message) values ('Hello from primary!');
 ```
 
 ### On Standby
 
 ```SQL
-SELECT * FROM test_repl;
+select * from pjtest_repl;
 -- You should see the "Hello from primary!" row.
 ```
 
 You can also check the WAL receiver status on the standby:
 
 ```SQL
-SELECT pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();
+select pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();
 -- These values should be close to each other and advancing.
-SELECT * FROM pg_stat_wal_receiver;
+select * from pg_stat_wal_receiver;
 ```
