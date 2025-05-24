@@ -145,7 +145,11 @@ You will be prompted for the rep_user password.
 
 **4. Create recovery.conf file**
 
-On PostgreSQL 11, you must create a recovery.conf file inside the standby's data directory (/var/lib/postgresql/11/main) to tell it to act as a standby and connect to the primary.
+In previous command, `-R` option should already have created `recovery.conf` file but if it is not created for some reason, or -R was not used, we can follow below instructions.
+
+`TIP`: `-R` option was introduced in Postgres version 9.1 and in version 12, Postgres moved from `recovery.conf` to `standby.signal` and adding settings to postgresql.auto.conf.
+
+In PostgreSQL 11, you must create a `recovery.conf` file inside the standby's data directory (`/var/lib/postgresql/11/main`) to tell it to act as a standby and connect to the primary.
 
 ```sh
 sudo vi /var/lib/postgresql/11/main/recovery.conf
