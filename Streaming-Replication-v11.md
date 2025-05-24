@@ -110,17 +110,22 @@ sudo rm -rf /var/lib/postgresql/11/main/*
 
 **3. Take a Base Backup from the Primary**
 
+Create a Replication slot, it is helpful especially when DB is of large size or for any network issue. It ensures WAL files are not removed until these are applied on Replica.
+
+```sql
+-- On the Primary server
+
+select * from pg_create_physical_replication_slot('standby_slot_1');
+
+select slot_name, plugin, slot_type, active, restart_lsn from pg_replication_slots;
+
+-- You should see standby_slot_1 listed as active if the standby is successfully connected and using it.
+```
+
 Run this command on the standby server as the postgres user. This connects to the primary, takes a snapshot of its data, and copies it to the standby's data directory.
 
 ```sh
 sudo -u postgres pg_basebackup -h 192.168.1.100 -U rep_user -D /var/lib/postgresql/11/main -F p -X stream -c fast -P -v -R --slot=standby_slot_1
-```
-
-```sql
--- On the Primary server
-select slot_name, plugin, slot_type, active, restart_lsn from pg_replication_slots;
-
--- You should see standby_slot_1 listed as active if the standby is successfully connected and using it.
 ```
 
 ```Ini, TOML
